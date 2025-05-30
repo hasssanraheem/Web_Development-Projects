@@ -1,136 +1,202 @@
 $(document).ready(function() {
-    // Cart functionality
-    let cart = [];
-    const cartModal = new bootstrap.Modal(document.getElementById('cartModal'));
+    const taskModal = new bootstrap.Modal('#taskModal');
+    const taskDetailModal = new bootstrap.Modal('#taskDetailModal');
+    let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+    let currentTaskId = null;
     
-    // Update cart count in navbar
-    function updateCartCount() {
-        const totalItems = cart.reduce((total, item) => total + item.quantity, 0);
-        $('.cart-count').text(totalItems);
+    // Initialize the dashboard
+    function initDashboard() {
+        renderTasks();
+        setupDragAndDrop();
+        updateTaskCounts();
+    }
+    
+    // Render all tasks to their respective columns
+    function renderTasks() {
+        // Clear all columns
+        $('#backlog-tasks, #progress-tasks, #review-tasks, #done-tasks').empty();
         
-        // Enable/disable checkout button
-        if (totalItems > 0) {
-            $('.checkout-btn').removeClass('disabled');
-        } else {
-            $('.checkout-btn').addClass('disabled');
+        // Render each task
+        tasks.forEach(task => {
+            const taskElement = createTaskElement(task);
+            $(`#${task.status}-tasks`).append(taskElement);
+        });
+    }
+    
+    // Create HTML element for a task
+    function createTaskElement(task) {
+        const dueDate = task.dueDate ? new Date(task.dueDate) : null;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const isOverdue = dueDate && dueDate < today && task.status !== 'done';
+        
+        return $(`
+            <div class="task-card" data-id="${task.id}">
+                <div class="task-title">${task.title}</div>
+                ${task.description ? `<div class="task-description">${task.description}</div>` : ''}
+                <div class="task-meta">
+                    <span class="task-priority priority-${task.priority}">${task.priority}</span>
+                    ${dueDate ? `
+                        <span class="task-due-date ${isOverdue ? 'overdue' : ''}">
+                            <i class="far fa-calendar-alt me-1"></i>
+                            ${formatDate(dueDate)}
+                        </span>
+                    ` : ''}
+                </div>
+            </div>
+        `);
+    }
+    
+    // Format date for display
+    function formatDate(date) {
+        return date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+        });
+    }
+    
+    // Set up drag and drop functionality
+    function setupDragAndDrop() {
+        $('.task-card').draggable({
+            revert: 'invalid',
+            cursor: 'move',
+            zIndex: 1000
+        });
+        
+        $('.board-column .card-body').droppable({
+            accept: '.task-card',
+            hoverClass: 'bg-light',
+            drop: function(event, ui) {
+                const taskId = ui.draggable.data('id');
+                const newStatus = $(this).parent().find('.card-header h5').text().toLowerCase().replace(' ', '-');
+                
+                updateTaskStatus(taskId, newStatus);
+                ui.draggable.detach().appendTo(this);
+            }
+        });
+    }
+    
+    // Update task status when moved between columns
+    function updateTaskStatus(taskId, newStatus) {
+        const taskIndex = tasks.findIndex(task => task.id === taskId);
+        
+        if (taskIndex !== -1) {
+            tasks[taskIndex].status = newStatus;
+            saveTasks();
+            updateTaskCounts();
         }
     }
     
-    // Update cart modal content
-    function updateCartModal() {
-        const $cartItems = $('.cart-items');
-        const $emptyCartMessage = $('.empty-cart-message');
-        
-        if (cart.length === 0) {
-            $emptyCartMessage.show();
-            $cartItems.html('');
+    // Update task counts in each column header
+    function updateTaskCounts() {
+        $('#backlog-count').text(`${tasks.filter(t => t.status === 'backlog').length} tasks`);
+        $('#progress-count').text(`${tasks.filter(t => t.status === 'progress').length} tasks`);
+        $('#review-count').text(`${tasks.filter(t => t.status === 'review').length} tasks`);
+        $('#done-count').text(`${tasks.filter(t => t.status === 'done').length} tasks`);
+    }
+    
+    // Save tasks to local storage
+    function saveTasks() {
+        localStorage.setItem('tasks', JSON.stringify(tasks));
+        renderTasks();
+        setupDragAndDrop();
+    }
+    
+    // New Task Button Click
+    $('#newTaskBtn').on('click', function() {
+        currentTaskId = null;
+        $('#taskForm')[0].reset();
+        $('#taskCategory').val('backlog');
+        taskModal.show();
+    });
+    
+    // Save Task Button Click
+    $('#saveTaskBtn').on('click', function() {
+        const title = $('#taskTitle').val().trim();
+        if (!title) {
+            alert('Task title is required!');
             return;
         }
         
-        $emptyCartMessage.hide();
-        
-        let cartHTML = '';
-        let total = 0;
-        
-        cart.forEach(item => {
-            const itemTotal = item.price * item.quantity;
-            total += itemTotal;
-            
-            cartHTML += `
-                <div class="cart-item">
-                    <img src="${item.image}" alt="${item.name}" class="cart-item-img">
-                    <div>
-                        <h6>${item.name}</h6>
-                        <p>${item.color} | Qty: ${item.quantity}</p>
-                        <p>$${itemTotal.toFixed(2)}</p>
-                        <button class="btn btn-sm btn-outline-danger remove-item" data-id="${item.id}">Remove</button>
-                    </div>
-                </div>
-            `;
-        });
-        
-        cartHTML += `
-            <div class="d-flex justify-content-between mt-3">
-                <h5>Total:</h5>
-                <h5>$${total.toFixed(2)}</h5>
-            </div>
-        `;
-        
-        $cartItems.html(cartHTML);
-    }
-    
-    // Add to cart
-    $('.add-to-cart').click(function() {
-        const color = $('.color-option.active').data('color');
-        const quantity = parseInt($('.quantity-input').val());
-        
-        const product = {
-            id: 1,
-            name: 'Premium Wireless Headphones',
-            price: 199.99,
-            color: color.charAt(0).toUpperCase() + color.slice(1),
-            quantity: quantity,
-            image: 'https://via.placeholder.com/100x100'
+        const taskData = {
+            id: currentTaskId || Date.now(),
+            title: title,
+            description: $('#taskDescription').val().trim(),
+            dueDate: $('#taskDueDate').val(),
+            priority: $('#taskPriority').val(),
+            status: $('#taskCategory').val(),
+            createdAt: currentTaskId ? 
+                tasks.find(t => t.id === currentTaskId).createdAt : 
+                new Date().toISOString()
         };
         
-        // Check if product already in cart
-        const existingItem = cart.find(item => item.id === product.id && item.color === product.color);
-        
-        if (existingItem) {
-            existingItem.quantity += quantity;
+        if (currentTaskId) {
+            // Update existing task
+            const taskIndex = tasks.findIndex(t => t.id === currentTaskId);
+            tasks[taskIndex] = taskData;
         } else {
-            cart.push(product);
+            // Add new task
+            tasks.push(taskData);
         }
         
-        updateCartCount();
-        
-        // Show success message
-        const toastHTML = `
-            <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
-                <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
-                    <div class="toast-header bg-success text-white">
-                        <strong class="me-auto">Success</strong>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
-                    </div>
-                    <div class="toast-body">
-                        Added ${quantity} ${quantity > 1 ? 'items' : 'item'} to your cart
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        $('body').append(toastHTML);
-        
-        // Remove toast after 3 seconds
-        setTimeout(() => {
-            $('.toast').remove();
-        }, 3000);
+        saveTasks();
+        taskModal.hide();
     });
     
-    // Add related products to cart
-    $('.add-to-cart-sm').click(function() {
-        const card = $(this).closest('.card');
-        const name = card.find('.card-title').text();
-        const price = parseFloat(card.find('.card-text').text().replace('$', ''));
+    // Task Click (View Details)
+    $(document).on('click', '.task-card', function() {
+        const taskId = $(this).data('id');
+        const task = tasks.find(t => t.id === taskId);
         
-        const product = {
-            id: Math.floor(Math.random() * 1000),
-            name: name,
-            price: price,
-            color: 'Default',
-            quantity: 1,
-            image: 'https://via.placeholder.com/100x100'
-        };
+        if (task) {
+            currentTaskId = taskId;
+            $('#detailTaskTitle').text(task.title);
+            $('#detailTaskDescription').text(task.description || 'No description available.');
+            
+            if (task.dueDate) {
+                const dueDate = new Date(task.dueDate);
+                $('#detailTaskDueDate').text(formatDate(dueDate));
+            } else {
+                $('#detailTaskDueDate').text('Not set');
+            }
+            
+            $('#detailTaskPriority').text(task.priority);
+            $('#detailTaskStatus').text(task.status === 'progress' ? 'In Progress' : task.status.charAt(0).toUpperCase() + task.status.slice(1));
+            
+            const createdDate = new Date(task.createdAt);
+            $('#detailTaskCreated').text(createdDate.toLocaleString());
+            
+            taskDetailModal.show();
+        }
+    });
+    
+    // Delete Task Button Click
+    $('#deleteTaskBtn').on('click', function() {
+        if (confirm('Are you sure you want to delete this task?')) {
+            tasks = tasks.filter(t => t.id !== currentTaskId);
+            saveTasks();
+            taskDetailModal.hide();
+        }
+    });
+    
+    // Edit Task Button Click
+    $('#editTaskBtn').on('click', function() {
+        const task = tasks.find(t => t.id === currentTaskId);
         
-        cart.push(product);
-        updateCartCount();
-        
-        // Show success message
-        const toastHTML = `
-            <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
-                <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
-                    <div class="toast-header bg-success text-white">
-                        <strong class="me-auto">Success</strong>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
-                    </div>
-                    <div class="toast
+        if (task) {
+            $('#taskTitle').val(task.title);
+            $('#taskDescription').val(task.description || '');
+            $('#taskDueDate').val(task.dueDate || '');
+            $('#taskPriority').val(task.priority);
+            $('#taskCategory').val(task.status);
+            
+            taskDetailModal.hide();
+            taskModal.show();
+        }
+    });
+    
+    // Initialize the dashboard
+    initDashboard();
+});
