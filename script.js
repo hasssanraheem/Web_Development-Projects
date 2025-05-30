@@ -1,167 +1,136 @@
-document.addEventListener('DOMContentLoaded', function() {
-    // DOM Elements
-    const taskForm = document.getElementById('taskForm');
-    const taskInput = document.getElementById('taskInput');
-    const taskList = document.getElementById('taskList');
-    const filterButtons = document.querySelectorAll('.filter-btn');
-    const themeToggle = document.getElementById('themeToggle');
+$(document).ready(function() {
+    // Cart functionality
+    let cart = [];
+    const cartModal = new bootstrap.Modal(document.getElementById('cartModal'));
     
-    // Load tasks from localStorage
-    let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
-    
-    // Load theme preference
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    document.body.classList.toggle('dark-mode', savedTheme === 'dark');
-    themeToggle.checked = savedTheme === 'dark';
-    
-    // Render tasks
-    renderTasks();
-    
-    // Event Listeners
-    taskForm.addEventListener('submit', addTask);
-    themeToggle.addEventListener('change', toggleTheme);
-    
-    // Functions
-    function addTask(e) {
-        e.preventDefault();
+    // Update cart count in navbar
+    function updateCartCount() {
+        const totalItems = cart.reduce((total, item) => total + item.quantity, 0);
+        $('.cart-count').text(totalItems);
         
-        const taskText = taskInput.value.trim();
-        
-        if (taskText === '') {
-            alert('Please enter a task');
-            return;
+        // Enable/disable checkout button
+        if (totalItems > 0) {
+            $('.checkout-btn').removeClass('disabled');
+        } else {
+            $('.checkout-btn').addClass('disabled');
         }
-        
-        const newTask = {
-            id: Date.now(),
-            text: taskText,
-            completed: false,
-            createdAt: new Date().toISOString()
-        };
-        
-        tasks.push(newTask);
-        saveTasks();
-        renderTasks();
-        taskInput.value = '';
-        taskInput.focus();
     }
     
-    function renderTasks(filter = 'all') {
-        taskList.innerHTML = '';
+    // Update cart modal content
+    function updateCartModal() {
+        const $cartItems = $('.cart-items');
+        const $emptyCartMessage = $('.empty-cart-message');
         
-        let filteredTasks = tasks;
-        
-        if (filter === 'pending') {
-            filteredTasks = tasks.filter(task => !task.completed);
-        } else if (filter === 'completed') {
-            filteredTasks = tasks.filter(task => task.completed);
-        }
-        
-        if (filteredTasks.length === 0) {
-            const emptyMessage = document.createElement('li');
-            emptyMessage.textContent = `No ${filter} tasks found`;
-            emptyMessage.classList.add('empty-message');
-            taskList.appendChild(emptyMessage);
+        if (cart.length === 0) {
+            $emptyCartMessage.show();
+            $cartItems.html('');
             return;
         }
         
-        filteredTasks.forEach(task => {
-            const taskItem = document.createElement('li');
-            taskItem.classList.add('task-item');
-            if (task.completed) {
-                taskItem.classList.add('completed');
-            }
+        $emptyCartMessage.hide();
+        
+        let cartHTML = '';
+        let total = 0;
+        
+        cart.forEach(item => {
+            const itemTotal = item.price * item.quantity;
+            total += itemTotal;
             
-            taskItem.innerHTML = `
-                <button class="task-btn complete-btn" data-id="${task.id}">
-                    <i class="fas fa-${task.completed ? 'check-circle' : 'circle'}"></i>
-                </button>
-                <span class="task-text">${task.text}</span>
-                <div class="task-actions">
-                    <button class="task-btn edit-btn" data-id="${task.id}">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="task-btn delete-btn" data-id="${task.id}">
-                        <i class="fas fa-trash"></i>
-                    </button>
+            cartHTML += `
+                <div class="cart-item">
+                    <img src="${item.image}" alt="${item.name}" class="cart-item-img">
+                    <div>
+                        <h6>${item.name}</h6>
+                        <p>${item.color} | Qty: ${item.quantity}</p>
+                        <p>$${itemTotal.toFixed(2)}</p>
+                        <button class="btn btn-sm btn-outline-danger remove-item" data-id="${item.id}">Remove</button>
+                    </div>
                 </div>
             `;
-            
-            taskList.appendChild(taskItem);
         });
         
-        // Add event listeners to new buttons
-        document.querySelectorAll('.complete-btn').forEach(btn => {
-            btn.addEventListener('click', toggleTaskComplete);
-        });
+        cartHTML += `
+            <div class="d-flex justify-content-between mt-3">
+                <h5>Total:</h5>
+                <h5>$${total.toFixed(2)}</h5>
+            </div>
+        `;
         
-        document.querySelectorAll('.edit-btn').forEach(btn => {
-            btn.addEventListener('click', editTask);
-        });
-        
-        document.querySelectorAll('.delete-btn').forEach(btn => {
-            btn.addEventListener('click', deleteTask);
-        });
+        $cartItems.html(cartHTML);
     }
     
-    function toggleTaskComplete(e) {
-        const taskId = parseInt(e.currentTarget.getAttribute('data-id'));
-        const taskIndex = tasks.findIndex(task => task.id === taskId);
+    // Add to cart
+    $('.add-to-cart').click(function() {
+        const color = $('.color-option.active').data('color');
+        const quantity = parseInt($('.quantity-input').val());
         
-        if (taskIndex !== -1) {
-            tasks[taskIndex].completed = !tasks[taskIndex].completed;
-            saveTasks();
-            renderTasks(getCurrentFilter());
-        }
-    }
-    
-    function editTask(e) {
-        const taskId = parseInt(e.currentTarget.getAttribute('data-id'));
-        const task = tasks.find(task => task.id === taskId);
+        const product = {
+            id: 1,
+            name: 'Premium Wireless Headphones',
+            price: 199.99,
+            color: color.charAt(0).toUpperCase() + color.slice(1),
+            quantity: quantity,
+            image: 'https://via.placeholder.com/100x100'
+        };
         
-        if (!task) return;
+        // Check if product already in cart
+        const existingItem = cart.find(item => item.id === product.id && item.color === product.color);
         
-        const newText = prompt('Edit your task:', task.text);
-        
-        if (newText !== null && newText.trim() !== '') {
-            task.text = newText.trim();
-            saveTasks();
-            renderTasks(getCurrentFilter());
-        }
-    }
-    
-    function deleteTask(e) {
-        if (!confirm('Are you sure you want to delete this task?')) {
-            return;
+        if (existingItem) {
+            existingItem.quantity += quantity;
+        } else {
+            cart.push(product);
         }
         
-        const taskId = parseInt(e.currentTarget.getAttribute('data-id'));
-        tasks = tasks.filter(task => task.id !== taskId);
-        saveTasks();
-        renderTasks(getCurrentFilter());
-    }
-    
-    function saveTasks() {
-        localStorage.setItem('tasks', JSON.stringify(tasks));
-    }
-    
-    function toggleTheme() {
-        document.body.classList.toggle('dark-mode');
-        const theme = document.body.classList.contains('dark-mode') ? 'dark' : 'light';
-        localStorage.setItem('theme', theme);
-    }
-    
-    function getCurrentFilter() {
-        const activeFilter = document.querySelector('.filter-btn.active');
-        return activeFilter ? activeFilter.getAttribute('data-filter') : 'all';
-    }
-    
-    // Filter buttons event listeners
-    filterButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            filterButtons.forEach(btn => btn.classList.remove('active'));
-            this.classList.add('active');
-            renderTasks(this.getAttribute('data-filter'));
-        });
+        updateCartCount();
+        
+        // Show success message
+        const toastHTML = `
+            <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+                <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="toast-header bg-success text-white">
+                        <strong class="me-auto">Success</strong>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                    <div class="toast-body">
+                        Added ${quantity} ${quantity > 1 ? 'items' : 'item'} to your cart
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        $('body').append(toastHTML);
+        
+        // Remove toast after 3 seconds
+        setTimeout(() => {
+            $('.toast').remove();
+        }, 3000);
     });
-});
+    
+    // Add related products to cart
+    $('.add-to-cart-sm').click(function() {
+        const card = $(this).closest('.card');
+        const name = card.find('.card-title').text();
+        const price = parseFloat(card.find('.card-text').text().replace('$', ''));
+        
+        const product = {
+            id: Math.floor(Math.random() * 1000),
+            name: name,
+            price: price,
+            color: 'Default',
+            quantity: 1,
+            image: 'https://via.placeholder.com/100x100'
+        };
+        
+        cart.push(product);
+        updateCartCount();
+        
+        // Show success message
+        const toastHTML = `
+            <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+                <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="toast-header bg-success text-white">
+                        <strong class="me-auto">Success</strong>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                    <div class="toast

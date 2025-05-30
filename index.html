@@ -3,40 +3,218 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>To-Do List</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>TechStore - Product Page</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>To-Do List</h1>
-            <div class="theme-toggle">
-                <i class="fas fa-moon"></i>
-                <label class="switch">
-                    <input type="checkbox" id="themeToggle">
-                    <span class="slider round"></span>
-                </label>
-                <i class="fas fa-sun"></i>
-            </div>
-        </header>
-        
-        <form id="taskForm">
-            <input type="text" id="taskInput" placeholder="Add a new task..." required>
-            <button type="submit" id="addTaskBtn">
-                <i class="fas fa-plus"></i> Add
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">TechStore</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
             </button>
-        </form>
-        
-        <div class="filters">
-            <button class="filter-btn active" data-filter="all">All</button>
-            <button class="filter-btn" data-filter="pending">Pending</button>
-            <button class="filter-btn" data-filter="completed">Completed</button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="#">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Products</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">About</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Contact</a></li>
+                </ul>
+                <div class="d-flex">
+                    <a href="#" class="btn btn-outline-light me-2"><i class="fas fa-shopping-cart"></i> Cart <span class="badge bg-danger cart-count">0</span></a>
+                    <a href="#" class="btn btn-outline-light"><i class="fas fa-user"></i> Login</a>
+                </div>
+            </div>
         </div>
-        
-        <ul id="taskList"></ul>
+    </nav>
+
+    <!-- Product Section -->
+    <div class="container my-5">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="product-gallery">
+                    <img src="https://via.placeholder.com/600x400" class="img-fluid main-image" alt="Product Image">
+                    <div class="thumbnail-container mt-3">
+                        <img src="https://via.placeholder.com/100x100" class="thumbnail me-2" alt="Thumbnail 1">
+                        <img src="https://via.placeholder.com/100x100" class="thumbnail me-2" alt="Thumbnail 2">
+                        <img src="https://via.placeholder.com/100x100" class="thumbnail me-2" alt="Thumbnail 3">
+                        <img src="https://via.placeholder.com/100x100" class="thumbnail" alt="Thumbnail 4">
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <h1 class="product-title">Premium Wireless Headphones</h1>
+                <div class="rating mb-3">
+                    <i class="fas fa-star text-warning"></i>
+                    <i class="fas fa-star text-warning"></i>
+                    <i class="fas fa-star text-warning"></i>
+                    <i class="fas fa-star text-warning"></i>
+                    <i class="fas fa-star-half-alt text-warning"></i>
+                    <span class="ms-2">4.5 (128 reviews)</span>
+                </div>
+                <p class="product-price">$199.99 <span class="text-danger"><del>$249.99</del> 20% off</span></p>
+                <p class="product-description">Experience crystal-clear sound with our premium wireless headphones. Featuring noise cancellation, 30-hour battery life, and comfortable over-ear design for extended listening sessions.</p>
+                
+                <div class="product-options mb-4">
+                    <div class="mb-3">
+                        <label class="form-label">Color:</label>
+                        <div class="color-options">
+                            <button class="btn btn-sm color-option black active" data-color="black"></button>
+                            <button class="btn btn-sm color-option blue" data-color="blue"></button>
+                            <button class="btn btn-sm color-option red" data-color="red"></button>
+                            <button class="btn btn-sm color-option white" data-color="white"></button>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Quantity:</label>
+                        <div class="quantity-selector d-flex align-items-center">
+                            <button class="btn btn-outline-secondary quantity-minus">-</button>
+                            <input type="number" class="form-control quantity-input text-center mx-2" value="1" min="1" max="10">
+                            <button class="btn btn-outline-secondary quantity-plus">+</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-flex gap-2">
+                    <button class="btn btn-primary btn-lg flex-grow-1 add-to-cart"><i class="fas fa-shopping-cart me-2"></i>Add to Cart</button>
+                    <button class="btn btn-outline-secondary btn-lg"><i class="fas fa-heart"></i></button>
+                </div>
+                
+                <div class="product-details mt-4">
+                    <h5>Product Details</h5>
+                    <ul>
+                        <li>Wireless Bluetooth connectivity</li>
+                        <li>Active Noise Cancellation</li>
+                        <li>30-hour battery life</li>
+                        <li>Built-in microphone for calls</li>
+                        <li>Includes carrying case and charging cable</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
     </div>
 
+    <!-- Related Products -->
+    <div class="container my-5">
+        <h3 class="mb-4">You May Also Like</h3>
+        <div class="row">
+            <div class="col-md-3 col-6 mb-4">
+                <div class="card h-100">
+                    <img src="https://via.placeholder.com/300x200" class="card-img-top" alt="Related Product">
+                    <div class="card-body">
+                        <h5 class="card-title">Bluetooth Speaker</h5>
+                        <p class="card-text text-success">$89.99</p>
+                        <button class="btn btn-sm btn-outline-primary add-to-cart-sm">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 mb-4">
+                <div class="card h-100">
+                    <img src="https://via.placeholder.com/300x200" class="card-img-top" alt="Related Product">
+                    <div class="card-body">
+                        <h5 class="card-title">Smart Watch</h5>
+                        <p class="card-text text-success">$159.99</p>
+                        <button class="btn btn-sm btn-outline-primary add-to-cart-sm">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 mb-4">
+                <div class="card h-100">
+                    <img src="https://via.placeholder.com/300x200" class="card-img-top" alt="Related Product">
+                    <div class="card-body">
+                        <h5 class="card-title">Wireless Earbuds</h5>
+                        <p class="card-text text-success">$129.99</p>
+                        <button class="btn btn-sm btn-outline-primary add-to-cart-sm">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 mb-4">
+                <div class="card h-100">
+                    <img src="https://via.placeholder.com/300x200" class="card-img-top" alt="Related Product">
+                    <div class="card-body">
+                        <h5 class="card-title">Phone Stand</h5>
+                        <p class="card-text text-success">$19.99</p>
+                        <button class="btn btn-sm btn-outline-primary add-to-cart-sm">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <h5>TechStore</h5>
+                    <p>Your one-stop shop for all tech gadgets and accessories.</p>
+                    <div class="social-icons">
+                        <a href="#" class="text-white me-2"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="text-white me-2"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-white me-2"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="text-white"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <h5>Shop</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-white">Products</a></li>
+                        <li><a href="#" class="text-white">Deals</a></li>
+                        <li><a href="#" class="text-white">New Arrivals</a></li>
+                        <li><a href="#" class="text-white">Best Sellers</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <h5>Support</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-white">Contact Us</a></li>
+                        <li><a href="#" class="text-white">FAQs</a></li>
+                        <li><a href="#" class="text-white">Shipping</a></li>
+                        <li><a href="#" class="text-white">Returns</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <h5>Newsletter</h5>
+                    <p>Subscribe to get updates on new products and special offers.</p>
+                    <div class="input-group">
+                        <input type="email" class="form-control" placeholder="Your email">
+                        <button class="btn btn-primary" type="button">Subscribe</button>
+                    </div>
+                </div>
+            </div>
+            <hr>
+            <div class="text-center">
+                <p class="mb-0">&copy; 2023 TechStore. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modal -->
+    <div class="modal fade" id="cartModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Your Cart</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="cart-items">
+                        <p class="text-center empty-cart-message">Your cart is empty</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Continue Shopping</button>
+                    <button type="button" class="btn btn-primary checkout-btn disabled">Proceed to Checkout</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
